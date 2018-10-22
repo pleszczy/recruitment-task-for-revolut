@@ -1,0 +1,21 @@
+apply plugin: 'java'
+apply plugin:'application'
+
+group 'pl.revolut.zadanie'
+version '0.1-SNAPSHOT'
+sourceCompatibility = 10
+mainClassName = "pl.revolut.zadanie.Main"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'io.javalin:javalin:2.3.0'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.5'
+    compile 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.5'
+    compile 'org.multiverse:multiverse-core:0.7.0'
+    compile 'org.apache.logging.log4j:log4j-slf4j-impl:2.11.1'
+
+    testCompile 'org.junit.jupiter:junit-jupiter-api:5.3.1'
+}

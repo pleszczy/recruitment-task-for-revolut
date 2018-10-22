@@ -1,0 +1,17 @@
+Configutation:
+  Appenders:
+    Console:
+      name: Console_Appender
+      target: SYSTEM_OUT
+      PatternLayout:
+        pattern: "[%-5level] %d{HH:mm:ss.SSS} %c{1} - %msg%n"
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+      - ref: Console_Appender
+    Logger:
+    - name: pl.revolut.zadanie.app.Container
+      level: trace
+      AppenderRef:
+      - ref: Console_Appender
