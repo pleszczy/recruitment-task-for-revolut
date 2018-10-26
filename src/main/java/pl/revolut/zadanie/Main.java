@@ -2,7 +2,7 @@ package pl.revolut.zadanie;
 
 import io.javalin.BadRequestResponse;
 import pl.revolut.zadanie.app.AccountController;
-import pl.revolut.zadanie.app.AccountInMemoryStore;
+import pl.revolut.zadanie.app.store.AccountInMemoryStore;
 import pl.revolut.zadanie.app.App;
 import pl.revolut.zadanie.app.Container;
 

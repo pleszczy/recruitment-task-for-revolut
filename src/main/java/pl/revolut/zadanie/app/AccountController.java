@@ -4,16 +4,21 @@ import io.javalin.BadRequestResponse;
 import io.javalin.Context;
 import io.javalin.NotFoundResponse;
 import io.javalin.apibuilder.CrudHandler;
+import pl.revolut.zadanie.app.dto.AccountDto;
+import pl.revolut.zadanie.app.model.Account;
+import pl.revolut.zadanie.app.store.AccountInMemoryStore;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.LongConsumer;
+import java.util.stream.Collectors;
 
 public class AccountController implements CrudHandler {
-    private final AccountInMemoryStore dao;
-    private LongConsumer newBalanceValidator;
+    private final AccountInMemoryStore store;
+    private final LongConsumer newBalanceValidator;
 
-    public AccountController(AccountInMemoryStore dao, LongConsumer newBalanceValidator) {
-        this.dao = dao;
+    public AccountController(AccountInMemoryStore store, LongConsumer newBalanceValidator) {
+        this.store = store;
         this.newBalanceValidator = newBalanceValidator;
     }
 
@@ -21,9 +26,9 @@ public class AccountController implements CrudHandler {
     public void create(Context context) {
         var accountDto = context.bodyAsClass(AccountDto.class);
         var iban = accountDto.iban();
-        if (!dao.contains(iban)) {
-            Account account = new Account(accountDto.balance());
-            dao.put(accountDto.iban(), account);
+        if (!store.contains(iban)) {
+            Account account = new Account(accountDto.balance(), iban);
+            store.put(accountDto.iban(), account);
         } else {
             throw new BadRequestResponse(String.format("Account with iban %s already exists", iban));
         }
@@ -31,17 +36,21 @@ public class AccountController implements CrudHandler {
 
     @Override
     public void delete(Context context, String iban) {
-        dao.remove(iban);
+        store.remove(iban);
     }
 
     @Override
     public void getAll(Context context) {
-        context.json(dao.getAll());
+        Set<AccountDto> accounts = store.getAll()
+                .stream()
+                .map(account -> new AccountDto(account.getIban(), account.getBalance()))
+                .collect(Collectors.toSet());
+        context.json(accounts);
     }
 
     @Override
     public void getOne(Context context, String iban) {
-        var account = dao.get(iban);
+        var account = store.get(iban);
         if (account.isPresent()) {
             context.json(new AccountDto(iban, account.get().getBalance()));
         } else {
@@ -52,7 +61,7 @@ public class AccountController implements CrudHandler {
     @Override
     public void update(Context context, String iban) {
         var accountDto = context.bodyAsClass(AccountDto.class);
-        Optional<Account> account = dao.get(iban);
+        Optional<Account> account = store.get(iban);
         if (account.isPresent()) {
             account.get().setBalance(accountDto.balance());
         } else {
@@ -64,8 +73,8 @@ public class AccountController implements CrudHandler {
         if (amount < 0) {
             throw new BadRequestResponse("Cant transfer negative founds between accounts");
         }
-        var accountFrom = dao.get(ibanFrom);
-        var accountTo = dao.get(ibanTo);
+        var accountFrom = store.get(ibanFrom);
+        var accountTo = store.get(ibanTo);
         if (accountFrom.isPresent() && accountTo.isPresent()) {
             accountFrom.get().transferTo(accountTo.get(), amount, newBalanceValidator);
         } else {

@@ -1,39 +1,42 @@
-package pl.revolut.zadanie.app;
+package pl.revolut.zadanie.app.store;
 
+
+import pl.revolut.zadanie.app.model.Account;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 public class AccountInMemoryStore {
     private final Map<String, Account> store;
 
     public AccountInMemoryStore(int initialCapacity) {
-        store = new HashMap<>(initialCapacity);
+        store = new ConcurrentHashMap<>(initialCapacity);
     }
 
-    boolean contains(String iban) {
+    public boolean contains(String iban) {
         return store.containsKey(iban);
     }
 
-    Optional<Account> get(String iban) {
+    public Optional<Account> get(String iban) {
         return Optional.ofNullable(store.get(iban));
     }
 
-    Account put(String iban, Account bankAccount) {
+    public Account put(String iban, Account bankAccount) {
         return store.put(iban, bankAccount);
     }
 
-    Account remove(String iban) {
+    public Account remove(String iban) {
         return store.remove(iban);
     }
 
-    Set<AccountDto> getAll() {
+    public Set<Account> getAll() {
         return store.entrySet()
                 .stream()
-                .map(entry -> new AccountDto(entry.getKey(), entry.getValue().getBalance()))
+                .map(Map.Entry::getValue)
                 .collect(Collectors.toSet());
     }
 }

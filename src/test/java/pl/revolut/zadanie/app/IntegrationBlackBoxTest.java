@@ -5,6 +5,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import pl.revolut.zadanie.Main;
+import pl.revolut.zadanie.app.dto.AccountDto;
 import pl.revolut.zadanie.utils.HttpTestClient;
 
 import java.io.IOException;
@@ -77,7 +78,8 @@ public class IntegrationBlackBoxTest {
         httpClient.post("http://localhost:8080/accounts", "{\"iban\":\"A\",\"balance\":\"1001\"}");
         httpClient.post("http://localhost:8080/accounts", "{\"iban\":\"B\",\"balance\":\"1001\"}");
 
-        CompletableFuture.allOf(IntStream.range(0, 10_000)
+        CompletableFuture.allOf(IntStream.range(0, 200_000)
+                .parallel()
                 .mapToObj(
                         value -> List.of(
                                 CompletableFuture.runAsync(() -> {
@@ -106,5 +108,7 @@ public class IntegrationBlackBoxTest {
         assertEquals(1001, accountA.balance());
         assertEquals(1001, accountB.balance());
     }
+
+    // TODO: Test for thread starvation
 
 }

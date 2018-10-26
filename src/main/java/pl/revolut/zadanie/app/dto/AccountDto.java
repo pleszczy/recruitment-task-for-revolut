@@ -1,4 +1,4 @@
-package pl.revolut.zadanie.app;
+package pl.revolut.zadanie.app.dto;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
@@ -11,12 +11,12 @@ public class AccountDto {
     private final String iban;
 
     @ConstructorProperties({"iban", "balance"})
-    AccountDto(String iban, long balance) {
+    public AccountDto(String iban, long balance) {
         this.iban = iban;
         this.balance = balance;
     }
 
-    String iban() {
+    public String iban() {
         return iban;
     }
 

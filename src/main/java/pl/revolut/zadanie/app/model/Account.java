@@ -1,4 +1,4 @@
-package pl.revolut.zadanie.app;
+package pl.revolut.zadanie.app.model;
 
 import org.multiverse.api.StmUtils;
 import org.multiverse.api.references.TxnLong;
@@ -7,19 +7,21 @@ import org.multiverse.api.references.TxnRef;
 import java.util.Date;
 import java.util.function.LongConsumer;
 
-class Account {
+public class Account {
     private final TxnRef<Date> lastModified = StmUtils.newTxnRef(new Date());
     private final TxnLong balance = StmUtils.newTxnLong();
+    private final String iban;
 
-    Account(long balance) {
+    public Account(long balance, String iban) {
+        this.iban = iban;
         StmUtils.atomic(() -> this.balance.set(balance));
     }
 
-    long getBalance() {
+    public long getBalance() {
         return StmUtils.atomic(() -> balance.get());
     }
 
-    void setBalance(long balance) {
+    public void setBalance(long balance) {
         StmUtils.atomic(() -> {
             this.balance.set(balance);
             updateLastModified();
@@ -43,22 +45,28 @@ class Account {
     }
 
     void incrementBalance(long value) {
-        incrementBalance(value, it -> {});
+        incrementBalance(value, it -> {
+        });
 
     }
 
     void decrementBalance(long value) {
-        decrementBalance(value, it -> {});
+        decrementBalance(value, it -> {
+        });
     }
 
     private void updateLastModified() {
         this.lastModified.set(new Date());
     }
 
-    void transferTo(Account accountTo, long amount, LongConsumer newBalanceValidator) {
+    public void transferTo(Account accountTo, long amount, LongConsumer newBalanceValidator) {
         StmUtils.atomic(() -> {
             this.decrementBalance(amount, newBalanceValidator);
             accountTo.incrementBalance(amount);
         });
+    }
+
+    public String getIban() {
+        return iban;
     }
 }

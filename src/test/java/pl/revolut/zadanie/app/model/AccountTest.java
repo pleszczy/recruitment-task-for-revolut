@@ -1,7 +1,8 @@
-package pl.revolut.zadanie.app;
+package pl.revolut.zadanie.app.model;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class AccountTest {
-    // Want to use at least 3 threads even on a single core CPU
     private final static ExecutorService fixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() + 2);
     private final LongConsumer positiveBalanceValidator = newBalance -> {
         if (newBalance < 0) {
@@ -32,7 +32,7 @@ public class AccountTest {
 
     @Test
     public void should_correctly_decrement_balance() {
-        Account account = new Account(100);
+        Account account = new Account(100, "A");
 
         account.decrementBalance(100);
 
@@ -41,7 +41,7 @@ public class AccountTest {
 
     @Test
     public void should_correctly_increment_balance() {
-        Account account = new Account(100);
+        Account account = new Account(100, "A");
 
         account.incrementBalance(100);
 
@@ -50,8 +50,8 @@ public class AccountTest {
 
     @Test
     public void should_correctly_transfer_between_two_accounts() {
-        Account accountA = new Account(100);
-        Account accountB = new Account(100);
+        Account accountA = new Account(100, "A");
+        Account accountB = new Account(100, "A");
 
         accountA.transferTo(accountB, 100, positiveBalanceValidator);
 
@@ -60,9 +60,11 @@ public class AccountTest {
 
     @Test
     void should_atomically_decrement_balance() throws ExecutionException, InterruptedException {
-        Account account = new Account(200_000);
+        Account account = new Account(200_000, "A");
 
-        var completableFutures = IntStream.range(0, 200_000)
+        var completableFutures = IntStream
+                .range(0, 200_000)
+                .parallel()
                 .mapToObj(value -> CompletableFuture.runAsync(() -> account.decrementBalance(1), fixedThreadPool))
                 .toArray(CompletableFuture[]::new);
         CompletableFuture.allOf(completableFutures).get();
@@ -72,9 +74,11 @@ public class AccountTest {
 
     @Test
     public void should_atomically_increment_balance() throws ExecutionException, InterruptedException {
-        Account account = new Account(0);
+        Account account = new Account(0, "A");
 
-        var completableFutures = IntStream.range(0, 200_000)
+        var completableFutures = IntStream
+                .range(0, 200_000)
+                .parallel()
                 .mapToObj(value -> CompletableFuture.runAsync(() -> account.incrementBalance(1), fixedThreadPool))
                 .toArray(CompletableFuture[]::new);
         CompletableFuture.allOf(completableFutures).get();
@@ -84,10 +88,12 @@ public class AccountTest {
 
     @Test
     public void should_transfer_between_accounts_atomically_and_with_no_deadlocks() throws ExecutionException, InterruptedException {
-        Account accountA = new Account(31);
-        Account accountB = new Account(31);
+        Account accountA = new Account(31, "A");
+        Account accountB = new Account(31, "B");
 
-        CompletableFuture.allOf(IntStream.range(0, 200_000)
+        CompletableFuture.allOf(IntStream
+                .range(0, 200_000)
+                .parallel()
                 .mapToObj(value -> List.of(
                         CompletableFuture.runAsync(() -> {
                             accountA.transferTo(accountB, 99, emptyValidator);
@@ -104,9 +110,11 @@ public class AccountTest {
         assertEquals(31, accountB.getBalance());
     }
 
+    // TODO: Test for thread starvation
+
     @Test
     public void should_validate_new_balance_after_decrementing() {
-        Account account = new Account(100);
+        Account account = new Account(100, "A");
 
         assertThrows(IllegalArgumentException.class, () -> account.decrementBalance(200, positiveBalanceValidator), "Expected to throw an exception if the new balance fails validation");
     }
@@ -118,7 +126,7 @@ public class AccountTest {
                 throw new IllegalArgumentException();
             }
         };
-        Account account = new Account(100);
+        Account account = new Account(100, "A");
 
         assertThrows(IllegalArgumentException.class, () -> account.incrementBalance(200, cappedBalanceValidator), "Expected to throw an exception if the new balance fails validation");
     }

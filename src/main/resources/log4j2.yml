@@ -12,6 +12,6 @@ Configutation:
       - ref: Console_Appender
     Logger:
     - name: pl.revolut.zadanie.app.Container
-      level: trace
+      level: info
       AppenderRef:
       - ref: Console_Appender
