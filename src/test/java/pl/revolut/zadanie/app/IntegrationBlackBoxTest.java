@@ -1,9 +1,6 @@
 package pl.revolut.zadanie.app;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import pl.revolut.zadanie.Main;
 import pl.revolut.zadanie.app.dto.AccountDto;
 import pl.revolut.zadanie.utils.HttpTestClient;
@@ -54,10 +51,11 @@ public class IntegrationBlackBoxTest {
 
         httpClient.get("http://localhost:8080/accounts/transfer/75/from/A/to/B");
 
-        AccountDto accountA = httpClient.get("http://localhost:8080/accounts/A", AccountDto.class);
-        AccountDto accountB = httpClient.get("http://localhost:8080/accounts/B", AccountDto.class);
-        assertEquals(0, accountA.balance());
-        assertEquals(150, accountB.balance());
+
+        Assertions.assertAll(
+                () -> assertEquals(0, httpClient.get("http://localhost:8080/accounts/A", AccountDto.class).balance(), "Expected account A to have 0"),
+                () -> assertEquals(150, httpClient.get("http://localhost:8080/accounts/B", AccountDto.class).balance(), "Expected account B to have 150")
+        );
     }
 
     @Test
@@ -67,10 +65,10 @@ public class IntegrationBlackBoxTest {
 
         httpClient.get("http://localhost:8080/accounts/transfer/150/from/A/to/B");
 
-        AccountDto accountA = httpClient.get("http://localhost:8080/accounts/A", AccountDto.class);
-        AccountDto accountB = httpClient.get("http://localhost:8080/accounts/B", AccountDto.class);
-        assertEquals(75, accountA.balance());
-        assertEquals(75, accountB.balance());
+        Assertions.assertAll(
+                () -> assertEquals(75, httpClient.get("http://localhost:8080/accounts/A", AccountDto.class).balance(), "Expected account A to have 75"),
+                () -> assertEquals(75, httpClient.get("http://localhost:8080/accounts/B", AccountDto.class).balance(), "Expected account B to have 75")
+        );
     }
 
     @Test
@@ -103,12 +101,10 @@ public class IntegrationBlackBoxTest {
                 .flatMap(Collection::stream)
                 .toArray(CompletableFuture[]::new)).get();
 
-        AccountDto accountA = httpClient.get("http://localhost:8080/accounts/A", AccountDto.class);
-        AccountDto accountB = httpClient.get("http://localhost:8080/accounts/B", AccountDto.class);
-        assertEquals(1001, accountA.balance());
-        assertEquals(1001, accountB.balance());
+        Assertions.assertAll(
+                () -> assertEquals(1001, httpClient.get("http://localhost:8080/accounts/A", AccountDto.class).balance(), "Expected account A to have 1001"),
+                () -> assertEquals(1001, httpClient.get("http://localhost:8080/accounts/B", AccountDto.class).balance(), "Expected account B to have 1001")
+        );
+
     }
-
-    // TODO: Test for thread starvation
-
 }
